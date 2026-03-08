@@ -9,12 +9,12 @@ import { fileURLToPath } from 'url';
 import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
 import dotEnv from "dotenv";
-import router from "./src/routes/api.js";
+import adminRouter from "./src/routes/admin.route.js";
 dotEnv.config();
 
 const app = express();
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+// const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Connect to MongoDB
 if (!process.env.DB_USER || !process.env.DB_PASS || !process.env.DB_CLUSTER || !process.env.DB_NAME) {
@@ -95,7 +95,7 @@ const reqLimit = rateLimit({
 app.use(reqLimit);
 
 // Routes
-app.use("/api/v1", router);
+app.use("/api/v1/ep/admin", adminRouter);
 app.use("/api/v1/get-file", express.static("uploads"));
 
 // app.use('/super-admin', 
