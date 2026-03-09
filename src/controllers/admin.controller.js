@@ -2,7 +2,7 @@ import Admin from "../models/Admin.model.js";
 import bcrypt from "bcryptjs";
 
 // Register Admin
-export const adminRegister = async (req, res) => {
+const adminRegister = async (req, res) => {
     try {
         const { firstName, lastName, email, password } = req.body;
 
@@ -56,7 +56,6 @@ export const adminRegister = async (req, res) => {
         });
     }
 };
-
 
 const adminController = {
     adminRegister,

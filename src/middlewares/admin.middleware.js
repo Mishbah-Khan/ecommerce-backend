@@ -1,0 +1,23 @@
+import { DecodeToken } from "../utility/token.utility.js"
+
+const adminValidation =  (req, res, next) => {
+    const token = req.cookies['admin-token'];
+    const decoded = DecodeToken(token);
+
+    if(!decoded){
+        return res.status(401).json({
+            status: 401,
+            message: 'Invalid token',
+        });
+    } else {
+        const email = decoded['email'];
+        const _id = decoded['_id'];
+
+        req.header.email = email;
+        req.header._id = _id;
+
+        next();
+    }
+}
+
+export default adminValidation;
