@@ -1,10 +1,10 @@
-import { DecodeToken } from "../utility/token.utility.js"
+import tokenHelper from "../utility/token.utility.js"
 
 const adminValidation =  (req, res, next) => {
     const token = req.cookies['admin-token'];
-    const decoded = DecodeToken(token);
+    const decoded = tokenHelper.DecodeToken(token);
 
-    if(!decoded){
+    if(decoded === null){
         return res.status(401).json({
             status: 401,
             message: 'Invalid token',
