@@ -7,7 +7,7 @@ const options = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
-    maxAge: parseInt( process.env.COOKIE_EXPIRE_DAYS || '7' ) * 24 * 60 * 60 * 1000,
+    maxAge: parseInt(process.env.COOKIE_EXPIRE_DAYS || '7') * 24 * 60 * 60 * 1000,
 }
 
 // Register Admin
@@ -74,7 +74,7 @@ const adminLogin = async (req, res) => {
         const user = await Admin.findOne({ email }).select('+password');
 
         if (!user) {
-            return res.status(401).json({
+            return res.status(404).json({
                 success: false,
                 message: "Invalid email"
             });
@@ -122,26 +122,22 @@ const adminProfile = async (req, res) => {
         const email = req.header.email;
 
         const matchStage = {
-            $match: {email}
+            $match: { email }
         }
 
         const project = {
-            $project : {
+            $project: {
                 password: 0,
             }
         }
 
-        const data =  await Admin.aggregate([matchStage, project]);
+        const data = await Admin.aggregate([matchStage, project]);
 
         res.status(200).json({
             success: true,
             data: data[0],
         });
 
-        console.log(data);
-        
-
-
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -151,8 +147,9 @@ const adminProfile = async (req, res) => {
     }
 }
 
-const adminLogout = () => {
+const adminVerify = async (req, res) => {
     try {
+        res.status(200).json({ success: true });
 
     } catch (error) {
         res.status(500).json({
@@ -162,11 +159,119 @@ const adminLogout = () => {
         });
     }
 }
+
+const adminUpdate = async (req, res) => {
+    try {
+        const { email, oldPassword, newPassword } = req.body;
+
+        const _id = req.header._id;
+        const userEmail = req.header.email;
+
+        // Prepare update object
+        const updateData = {};
+
+        // If email is being updated, check if it's already taken
+        if (email && email !== userEmail) {
+            const existingUser = await Admin.findOne({ email });
+            if (existingUser) {
+                return res.status(409).json({
+                    success: false,
+                    message: "Email already in use"
+                });
+            }
+            updateData.email = email;
+        }
+
+        // Find user by ID
+        const user = await Admin.findById(_id).select('+password');
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        // Verify old password if trying to change password
+        if (newPassword) {
+            if (!oldPassword) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Old password is required to set new password"
+                });
+            }
+
+            const isMatch = await user.comparePassword(oldPassword);
+            if (!isMatch) {
+                return res.status(401).json({
+                    success: false,
+                    message: "Invalid old password"
+                });
+            }
+
+            // Hash new password
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(newPassword, salt);
+            updateData.password = hashedPassword;
+        }
+
+        // Update user
+        const updatedUser = await Admin.findByIdAndUpdate(
+            _id,
+            updateData,
+            {
+                new: true,
+                runValidators: true
+            }
+        );  // Exclude password from response
+
+        // Generate new token
+        const token = tokenHelper.EncodeToken(updatedUser.email, updatedUser._id.toString());
+
+        // Set cookie
+        res.cookie('admin-token', token, options);
+
+        res.status(200).json({
+            success: true,
+            message: "Admin updated successfully",
+            user: {
+                email: updatedUser.email,
+                token: token
+            }
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            message: "Something went wrong"
+        });
+    }
+}
+
+const adminLogout = async (req, res) => {
+    try {
+        res.clearCookie('admin-token');
+        res.status(200).json({
+            success: true,
+            message: "Logout Successful"
+        })
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.toString(),
+            message: "Something went wrong"
+        });
+    }
+}
+
 
 const adminController = {
     adminRegister,
     adminLogin,
     adminProfile,
+    adminVerify,
+    adminUpdate,
     adminLogout,
 };
 

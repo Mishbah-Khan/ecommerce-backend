@@ -5,12 +5,11 @@ import adminValidation from "../middlewares/admin.middleware.js";
 const adminRouter =  express.Router();
 
 adminRouter.post('/admin-register', adminController.adminRegister);
-
 adminRouter.post('/admin-login', adminController.adminLogin);
-
 adminRouter.get('/admin-profile', adminValidation , adminController.adminProfile);
-
-adminRouter.post('/admin-logout',  adminController.adminLogout);
+adminRouter.get('/admin-verify', adminValidation , adminController.adminVerify);
+adminRouter.post('/admin-update', adminValidation,  adminController.adminUpdate);
+adminRouter.get('/admin-logout', adminValidation,  adminController.adminLogout);
 
 
 
