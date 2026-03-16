@@ -10,6 +10,7 @@ import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
 import dotEnv from "dotenv";
 import adminRouter from "./src/routes/admin.route.js";
+import userRouter from "./src/routes/user.route.js";
 dotEnv.config();
 
 const app = express();
@@ -96,6 +97,7 @@ app.use(reqLimit);
 
 // Routes
 app.use("/api/v1/ep/admin", adminRouter);
+app.use("/api/v1/ep/user", userRouter);
 app.use("/api/v1/get-file", express.static("uploads"));
 
 // app.use('/super-admin', 

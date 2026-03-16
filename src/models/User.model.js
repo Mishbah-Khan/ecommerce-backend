@@ -2,19 +2,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema({
-    // Auth fields
-    email: {
-        type: String,
-        unique: true,
-        lowercase: true,
-        trim: true,
-        required: [true, "Email is required"]
-    },
-    password: { 
-        type: String, 
-        required: [true, "Password is required"] 
-    },
-    
+
     // Customer information
     cus_name: { 
         type: String,
@@ -45,6 +33,19 @@ const userSchema = new mongoose.Schema({
     },
     cus_state: { 
         type: String 
+    },
+
+    // Auth fields
+    email: {
+        type: String,
+        unique: true,
+        lowercase: true,
+        trim: true,
+        required: [true, "Email is required"]
+    },
+    password: { 
+        type: String, 
+        required: [true, "Password is required"] 
     },
     
     // Shipping information

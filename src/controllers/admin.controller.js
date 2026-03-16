@@ -2,7 +2,6 @@ import Admin from "../models/Admin.model.js";
 import bcrypt from "bcryptjs";
 import tokenHelper from "../utility/token.utility.js"
 
-
 const options = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
