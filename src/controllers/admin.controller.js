@@ -31,16 +31,12 @@ const adminRegister = async (req, res) => {
             });
         }
 
-        // Hash password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
         // Create new admin
         const admin = new Admin({
             firstName,
             lastName,
             email,
-            password: hashedPassword
+            password
         });
 
         // Save to database
