@@ -1,13 +1,45 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
-const userSchema = new mongoose.Schema({
-
-    // Customer information
+// User Auth Schema (Registration only)
+const userAuthSchema = new mongoose.Schema({
     cus_name: { 
         type: String,
         required: [true, "Customer name is required"] 
     },
+    email: {
+        type: String,
+        unique: true,
+        lowercase: true,
+        trim: true,
+        required: [true, "Email is required"],
+        index: true
+    },
+    password: { 
+        type: String, 
+        required: [true, "Password is required"] 
+    },
+    // Reference to profile (created after registration)
+    profile: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'UserProfile'
+    },
+}, {
+    timestamps: true,
+    versionKey: false,
+});
+
+// User Profile Schema (Complete information)
+const userProfileSchema = new mongoose.Schema({
+    // Reference back to auth
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'UserAuth',
+        required: true,
+        unique: true
+    },
+
+    // Customer information
     cus_add: { 
         type: String,
         required: [true, "Customer address is required"] 
@@ -35,19 +67,6 @@ const userSchema = new mongoose.Schema({
         type: String 
     },
 
-    // Auth fields
-    email: {
-        type: String,
-        unique: true,
-        lowercase: true,
-        trim: true,
-        required: [true, "Email is required"]
-    },
-    password: { 
-        type: String, 
-        required: [true, "Password is required"] 
-    },
-    
     // Shipping information
     ship_name: { 
         type: String,
@@ -83,7 +102,7 @@ const userSchema = new mongoose.Schema({
 });
 
 // Hash password before saving
-userSchema.pre("save", async function(next) {
+userAuthSchema.pre("save", async function(next) {
     if (!this.isModified("password")) return next();
     
     try {
@@ -96,10 +115,21 @@ userSchema.pre("save", async function(next) {
 });
 
 // Method to compare password
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userAuthSchema.methods.comparePassword = async function(candidatePassword) {
     return await bcrypt.compare(candidatePassword, this.password);
 };
 
-const User = mongoose.model("User", userSchema);
+// Method to get complete user profile
+userAuthSchema.methods.getCompleteProfile = async function() {
+    await this.populate('profile');
+    return this;
+};
 
+const UserAuth = mongoose.model("UserAuth", userAuthSchema);
+const UserProfile = mongoose.model("UserProfile", userProfileSchema);
+
+const User = {
+    UserAuth,
+    UserProfile
+}
 export default User;
