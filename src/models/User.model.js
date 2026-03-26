@@ -19,38 +19,18 @@ const userAuthSchema = new mongoose.Schema({
         type: String, 
         required: [true, "Password is required"] 
     },
-    // Reference to profile (created after registration)
-    profile: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'UserProfile'
-    },
-}, {
-    timestamps: true,
-    versionKey: false,
-});
-
-// User Profile Schema (Complete information)
-const userProfileSchema = new mongoose.Schema({
-    // Reference back to auth
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'UserAuth',
-        required: true,
-        unique: true
-    },
 
     // Customer information
     cus_add: { 
         type: String,
-        required: [true, "Customer address is required"] 
+
     },
     cus_city: { 
         type: String,
-        required: [true, "City is required"] 
+
     },
     cus_country: { 
         type: String,
-        required: [true, "Country is required"],
         default: "Bangladesh" 
     },
     cus_fax: { 
@@ -58,7 +38,6 @@ const userProfileSchema = new mongoose.Schema({
     },
     cus_phone: { 
         type: String,
-        required: [true, "Phone number is required"] 
     },
     cus_postcode: { 
         type: String 
@@ -70,24 +49,20 @@ const userProfileSchema = new mongoose.Schema({
     // Shipping information
     ship_name: { 
         type: String,
-        required: [true, "Shipping name is required"] 
     },
     ship_add: { 
         type: String,
-        required: [true, "Shipping address is required"] 
+
     },
     ship_city: { 
         type: String,
-        required: [true, "Shipping city is required"] 
     },
     ship_country: { 
         type: String,
-        required: [true, "Shipping country is required"],
         default: "Bangladesh" 
     },
     ship_phone: { 
         type: String,
-        required: [true, "Shipping phone is required"] 
     },
     ship_postcode: { 
         type: String 
@@ -125,11 +100,6 @@ userAuthSchema.methods.getCompleteProfile = async function() {
     return this;
 };
 
-const UserAuth = mongoose.model("UserAuth", userAuthSchema);
-const UserProfile = mongoose.model("UserProfile", userProfileSchema);
+const User = mongoose.model("User", userAuthSchema);
 
-const User = {
-    UserAuth,
-    UserProfile
-}
 export default User;
