@@ -7,45 +7,24 @@ import cors from "cors";
 import path, { dirname, resolve, join } from 'path';
 import { fileURLToPath } from 'url';
 import cookieParser from "cookie-parser";
-import mongoose from "mongoose";
-import dotEnv from "dotenv";
+import ConnectDB from "./src/config/database.config.js";
 import adminRouter from "./src/routes/admin.route.js";
 import userRouter from "./src/routes/user.route.js";
-dotEnv.config();
+import productRouter from "./src/routes/product.route.js";
+import brandRouter from "./src/routes/brand.route.js";
+import categoryRouter from "./src/routes/category.route.js";
 
 const app = express();
 
-// const __dirname = dirname(fileURLToPath(import.meta.url));
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Connect to MongoDB
-if (!process.env.DB_USER || !process.env.DB_PASS || !process.env.DB_CLUSTER || !process.env.DB_NAME) {
-  throw new Error("Missing DB configuration");
-}
-
-const URL = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.${process.env.DB_CLUSTER}.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
-
-const option = {
-    autoIndex: process.env.NODE_ENV !== 'production',
-    serverSelectionTimeoutMS: 50000,
-}
-
-export const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(URL, option);
-    console.log(`✅ DB Connected - Name: ${conn.connection.name}`);
-  } catch (error) {
-    console.error('❌ Database connection error:', error.message);
-    process.exit(1);
-  }
-};
-
-connectDB();
-mongoose.set('strictQuery', true);
+ConnectDB();
 
 // Global Middlewares - Order is important!
 app.use(cookieParser());
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:5000'],
+    origin: ['http://localhost:5173' , 'http://localhost:5000'],
     credentials: true,
 }));
 
@@ -98,6 +77,9 @@ app.use(reqLimit);
 // Routes
 app.use("/api/v1/ep/admin", adminRouter);
 app.use("/api/v1/ep/user", userRouter);
+app.use("/api/v1/ep/product", productRouter);
+app.use("/api/v1/ep/brand", brandRouter);
+app.use("/api/v1/ep/category", categoryRouter);
 app.use("/api/v1/get-file", express.static("uploads"));
 
 // app.use('/super-admin', 

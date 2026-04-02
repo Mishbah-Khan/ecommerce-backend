@@ -6,19 +6,9 @@ const categorySchema = new mongoose.Schema({
         required: true,
         unique: true
     },
-    cat_img: {
-        type: String,
-        required: true
-    },
     slug: {
         type: String,
-        required: true,
         unique: true
-    },
-    parentCategory: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
-        default: null
     }
 }, {
     timestamps: true,
