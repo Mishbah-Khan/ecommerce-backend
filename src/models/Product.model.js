@@ -1,115 +1,78 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const productSchema = new mongoose.Schema({
-    // Basic Information
-    name: {
+const ProductSchema = new mongoose.Schema({
+    title: { 
         type: String,
-        required: [true, "Product name is required"],
         trim: true
     },
-    slug: {
+    images: [String],
+    sort_description: { 
         type: String,
-        required: true,
-        unique: true,
-        lowercase: true
+        trim: true
     },
-    description: {
-        type: String,
-        required: [true, "Product description is required"]
-    },
-    shortDescription: {
-        type: String,
-        default: ""
-    },
-    
-    // Pricing
-    price: {
+    price: { 
         type: Number,
-        required: [true, "Product price is required"],
-        min: [0, "Price cannot be negative"]
+        min: 0
     },
-    discountPrice: {
-        type: Number,
-        default: 0,
-        min: [0, "Discount price cannot be negative"]
-    },
-    
-    // Stock
-    stock: {
-        type: Number,
-        required: [true, "Stock quantity is required"],
-        min: [0, "Stock cannot be negative"],
-        default: 0
-    },
-    sku: {
-        type: String,
-        required: [true, "SKU is required"],
-        unique: true
-    },
-
-    // Type
-    color: {
-        type: [String],
-        default:''
-    },
-
-    size:{
-        type: [String],
-        default:''
-
-    },
-    
-    // Media
-    images: [{
-        type: String,
-        default: []
-    }],
-    thumbnail: {
-        type: String,
-        default: "default-product.jpg"
-    },
-    
-    // Relationships
-    category: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
-        required: [true, "Category is required"]
-    },
-    brand: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Brand"
-    },
-    
-    // Status
-    isActive: {
-        type: Boolean,
-        default: true
-    },
-    isFeatured: {
+    is_discount: { 
         type: Boolean,
         default: false
     },
-    
-    // Tags
-    tags: [String]
-    
+    discount_price: { 
+        type: Number,
+        min: 0
+    },
+    remark: { 
+        type: String,
+        trim: true
+    },
+    stock: { 
+        type: Number,
+        min: 0,
+        default: 0
+    },
+    color: [String],
+    size: [String],
+    description: { 
+        type: String,
+        trim: true
+    },
+    category: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Category',
+        required: true 
+    },
+    brand: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Brand',
+        required: true 
+    }
 }, {
     timestamps: true,
-    versionKey: false,
+    versionKey: false
 });
 
-// Generate slug from name before saving
-productSchema.pre("save", function(next) {
-    if (this.isModified("name")) {
-        this.slug = this.name
-            .toLowerCase()
-            .replace(/[^a-zA-Z0-9]/g, "-")
-            .replace(/-+/g, "-")
-            .replace(/^-|-$/g, "");
+// Optional: Add indexes for better query performance
+ProductSchema.index({ category_id: 1 });
+ProductSchema.index({ brand_id: 1 });
+ProductSchema.index({ price: 1 });
+ProductSchema.index({ createdAt: -1 });
+
+// Optional: Virtual field to get discounted price
+ProductSchema.virtual('final_price').get(function() {
+    if (this.is_discount && this.discount_price) {
+        return this.discount_price;
     }
-    next();
+    return this.price;
 });
 
-const Product = mongoose.model("Product", productSchema);
+// Optional: Method to check if product is in stock
+ProductSchema.methods.isInStock = function(quantity = 1) {
+    return this.stock >= quantity;
+};
+
+const Product = mongoose.model('Product', ProductSchema);
 
 export default Product;
+
+
