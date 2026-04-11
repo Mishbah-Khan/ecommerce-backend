@@ -37,12 +37,12 @@ const ProductSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
-    category: { 
+    category_id: { 
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'Category',
         required: true 
     },
-    brand: { 
+    brand_id: { 
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'Brand',
         required: true 

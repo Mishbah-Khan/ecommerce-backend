@@ -1,10 +1,10 @@
+import mongoose from "mongoose";
 import Product from "../models/Product.model.js";
-
+const ObjectId = mongoose.Types.ObjectId;
 const createProduct = async (req, res) => {
     try {
         const {
             title,
-            images,
             sort_description,
             price,
             is_discount,
@@ -14,8 +14,10 @@ const createProduct = async (req, res) => {
             color,
             size,
             description,
-            category,
-            brand } = req.body;
+            category_id,
+            brand_id } = JSON.parse(req.body.data);
+
+            const imgUrl = req.file ? req.file.path : null;
 
         // Check if required fields exist
         if (!title || !price || !category) {
@@ -34,7 +36,7 @@ const createProduct = async (req, res) => {
 
         const data = await Product.create({
             title,
-            images,
+            images:imgUrl,
             sort_description,
             price,
             is_discount,
@@ -44,8 +46,8 @@ const createProduct = async (req, res) => {
             color,
             size,
             description,
-            category,
-            brand
+            category_id,
+            brand_id
         });
 
         return res.status(201).json({  // 201 for creation
@@ -65,12 +67,78 @@ const createProduct = async (req, res) => {
 
 const getAllProducts = async (req, res) => {
     try {
-        const data = await Product.find();
+        const page_no = Number(req.params.page_no);      
+        const per_page = Number(req.params.per_page);    
+        const category_id = req.params.category;       
+        const brand_id = req.params.brand;
+        const remark = req.params.remark; 
+        const keyword = req.params.keyword;
+
+        // Validate pagination parameters
+        if (isNaN(page_no) || isNaN(per_page) || page_no < 1 || per_page < 1) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid pagination parameters"
+            });
+        }
+
+        const skipItem = (page_no - 1) * per_page;
+        const sortStage = { createdAt: -1 };
+        
+        // Build match conditions dynamically
+        let matchConditions = {};
+        
+        if (category_id && category_id !== '0') {
+            matchConditions.category_id = new ObjectId(category_id);
+        }
+        if (brand_id && brand_id !== '0') {
+            matchConditions.brand_id = new ObjectId(brand_id);
+        }
+        if (remark && remark !== '0') {
+            matchConditions.remark = remark;
+        }
+        if (keyword && keyword !== '0') {
+            matchConditions.title = { $regex: keyword, $options: "i" };
+        }
+
+        const MatchingStage = { $match: matchConditions };
+
+        const joinWithCategory = {
+            $lookup: {
+                from: "categories",
+                localField: "category_id",
+                foreignField: "_id",
+                as: "category",
+            },
+        };
+
+        const facetStage = {
+            $facet: {
+                totalCount: [{ $count: "count" }],
+                products: [
+                    { $sort: sortStage },
+                    { $skip: skipItem },
+                    { $limit: per_page },
+                    joinWithCategory,
+                ]
+            }
+        };
+
+        const result = await Product.aggregate([MatchingStage, facetStage]);
+        
+        const totalCount = result[0]?.totalCount[0]?.count || 0;
+        const products = result[0]?.products || [];
 
         return res.status(200).json({
             success: true,
             message: "Products list fetched successfully",
-            data: data
+            data: products,
+            pagination: {
+                currentPage: page_no,
+                perPage: per_page,
+                totalItems: totalCount,
+                totalPages: Math.ceil(totalCount / per_page)
+            }
         });
 
     } catch (error) {
@@ -85,7 +153,7 @@ const getAllProducts = async (req, res) => {
 const getSingleProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const data = await Product.findOne({ id });
+        const data = await Product.findById(id);
 
         return res.status(200).json({
             success: true,
