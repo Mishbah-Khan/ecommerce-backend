@@ -50,7 +50,7 @@ const createProduct = async (req, res) => {
             brand_id
         });
 
-        return res.status(201).json({  // 201 for creation
+        return res.status(201).json({
             success: true,
             message: "Product created successfully",
             data: data
@@ -69,8 +69,8 @@ const getAllProducts = async (req, res) => {
     try {
         const page_no = Number(req.params.page_no);      
         const per_page = Number(req.params.per_page);    
-        const category_id = req.params.category;       
-        const brand_id = req.params.brand;
+        const category_id = req.params.category_id;       
+        const brand_id = req.params.brand_id;
         const remark = req.params.remark; 
         const keyword = req.params.keyword;
 
@@ -152,8 +152,31 @@ const getAllProducts = async (req, res) => {
 
 const getSingleProduct = async (req, res) => {
     try {
-        const { id } = req.params;
-        const data = await Product.findById(id);
+        const id = new ObjectId(req.params.id);
+        
+        const matchStage = {
+            $match:{_id: id},
+        }
+
+        const joinWithCategory = {
+            $lookup: {
+                from: "categories",
+                localField: "category_id",
+                foreignField: "_id",
+                as: "category",
+            },
+        }
+
+        const joinWithBrand = {
+            $lookup: {
+                from: "brands",
+                localField:"brand_id",
+                foreignField: "_id",
+                as: "brand",
+            }
+        }
+
+        const data = await Product.aggregate([matchStage, joinWithCategory, joinWithBrand]);
 
         return res.status(200).json({
             success: true,
@@ -172,7 +195,6 @@ const getSingleProduct = async (req, res) => {
 
 const updateProduct = async (req, res) => {
     try {
-
         const {
             title,
             images,

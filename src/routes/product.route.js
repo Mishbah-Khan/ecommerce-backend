@@ -12,7 +12,7 @@ productRouter.post(
   productController.createProduct
 );
 
-productRouter.get('/get-all-products/:page_no/:per_page/:category/:brand/:remark/:keyword', productController.getAllProducts);
+productRouter.get('/get-all-products/:category_id/:brand_id/:remark/:keyword/:page_no/:per_page', productController.getAllProducts);
 
 productRouter.get('/single-product/:id', adminValidation, productController.getSingleProduct);
 productRouter.put('/update-product/:id', adminValidation, productController.updateProduct);

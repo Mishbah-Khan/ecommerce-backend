@@ -115,13 +115,11 @@ const userProfile = async (req, res) => {
         const matchStage = {
             $match: { email }
         }
-
         const project = {
             $project: {
                 password: 0,
             }
         }
-
         const data = await User.aggregate([matchStage, project]);
 
         res.status(200).json({
@@ -153,7 +151,6 @@ const userVerify = async (req, res) => {
 
 const userUpdate = async (req, res) => {
     try {
-        // Fix: Use req.headers (or req.user if using auth middleware)
         const email = req.header.email;
         const _id = req.header._id;
         
